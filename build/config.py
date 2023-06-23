@@ -5,3 +5,4 @@ FLAGS_DEBUG   = '-O0 -ggdb3 -fsanitize=address -fsanitize=undefined -fno-omit-fr
 FLAGS_RELEASE = '-O3 -march=native -DNDEBUG'
 LIBS          = ''
 TARGET        = 'c-template'
+SRC_MAIN      = 'src/main.c'

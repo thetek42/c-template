@@ -21,12 +21,13 @@ class File:
     deps: list[str]
 
 
-class CompilationMode(enum.Enum):
+class Compilation_Mode(enum.Enum):
     '''
     used to specify if the program should be compiled in debug or release mode.
     '''
     Debug = 'debug'
     Release = 'release'
+    Test = 'test'
 
 
 class Color(enum.Enum):
@@ -35,29 +36,48 @@ class Color(enum.Enum):
     '''
     Reset = '\x1b[0m'
     Red = '\x1b[31m'
-    Green = '\x1b[32m'
+    Cyan = '\x1b[36m'
 
 
-def get_source_files() -> list[str]:
+def get_source_files(compilation_mode: Compilation_Mode) -> list[str]:
     '''
     get a list of source files located in the `src/` folder. only matches files
     ending in `*.c`.
     '''
     path = pathlib.Path('src/')
     files = [str(p) for p in path.rglob('*.c')]
+    if compilation_mode == Compilation_Mode.Test:
+        test_path = pathlib.Path('test/')
+        files.remove(config.SRC_MAIN)
+        files.extend([str(p) for p in test_path.rglob('*.c')])
     return files
 
 
-def get_object_location(src_file: str, compilation_mode: CompilationMode) -> str:
+def get_object_location(src_file: str, compilation_mode: Compilation_Mode) -> str:
     '''
     get the location of the resulting object file. for example, a source file
     `src/foo/bar/baz.c` will have the object location `obj/debug/foo/bar/baz.c`
     if compiled in debug mode.
     '''
-    result = src_file.replace('src/', f'obj/{compilation_mode.value}/')
+    if compilation_mode == Compilation_Mode.Test:
+        subfolder = Compilation_Mode.Debug.value
+    else:
+        subfolder = compilation_mode.value
+    result = src_file.replace('src/', f'obj/{subfolder}/')
+    result = result.replace('test/', 'obj/test/')
     result = result[:-2] + '.o'
     return result
 
+
+def get_include_directories(src_file: str) -> list[str]:
+    '''
+    get a list the directories that header files are located in, to be used as
+    compiler flags.
+    '''
+    if src_file.startswith('test/'):
+        return ['-Iinc', '-Itest']
+    else:
+        return ['-Iinc']
 
 def get_dependencies(src_file: str) -> list[str]:
     '''
@@ -65,8 +85,9 @@ def get_dependencies(src_file: str) -> list[str]:
     since `cc -M` uses make as its output format, it needs to be converted to a
     regular python list.
     '''
+    includes = get_include_directories(src_file)
     # obtain raw make-compatible output from `cc -M` and remove linebreaks
-    output_raw = subprocess.check_output([config.COMPILER, '-Iinc', '-M', '-MM', src_file])
+    output_raw = subprocess.check_output([config.COMPILER, *includes, '-M', '-MM', src_file])
     output = output_raw.decode('utf-8').replace('\n', '').replace('\\', '')
     # remove make rule to get space-delimited list of dependencies
     deps = output.split(':')[1].split(' ')
@@ -75,13 +96,13 @@ def get_dependencies(src_file: str) -> list[str]:
     return deps
 
 
-def get_file_list(compilation_mode: CompilationMode) -> list[File]:
+def get_file_list(compilation_mode: Compilation_Mode) -> list[File]:
     '''
     get a list of `File` objects that contain information about where source
     files are, where their object files will be located and which headers they
     depend on.
     '''
-    src_files = get_source_files()
+    src_files = get_source_files(compilation_mode)
     files: list[File] = []
 
     for src in src_files:
@@ -131,7 +152,7 @@ def check_if_need_compile(file: File) -> bool:
     return False
 
 
-def compile_file(file: File, compilation_mode: CompilationMode) -> int:
+def compile_file(file: File, compilation_mode: Compilation_Mode) -> int:
     '''
     compile a source file to an object file.
     '''
@@ -139,23 +160,24 @@ def compile_file(file: File, compilation_mode: CompilationMode) -> int:
         return 0
 
     path = pathlib.Path(file.obj)
+    includes = get_include_directories(file.src)
 
     obj_folder = str(path.parent)
     os.makedirs(obj_folder, exist_ok=True)
 
-    if compilation_mode == CompilationMode.Debug:
-        mode_specific_flags = config.FLAGS_DEBUG
-    elif compilation_mode == CompilationMode.Release:
+    if compilation_mode == Compilation_Mode.Release:
         mode_specific_flags = config.FLAGS_RELEASE
+    else:
+        mode_specific_flags = config.FLAGS_DEBUG
 
-    log_message(Color.Green, 'cc', file.obj)
+    log_message(Color.Cyan, 'cc', file.obj)
 
     return_code = subprocess.call([
         config.COMPILER,
         *config.FLAGS.split(' '),
         *config.FLAGS_WARN.split(' '),
         *mode_specific_flags.split(' '),
-        '-Iinc',
+        *includes,
         '-c', file.src,
         '-o', file.obj,
     ])
@@ -163,7 +185,14 @@ def compile_file(file: File, compilation_mode: CompilationMode) -> int:
     return return_code
 
 
-def link_program(files: list[File], compilation_mode: CompilationMode) -> int:
+def get_target_name(compilation_mode: Compilation_Mode) -> str:
+    '''
+    get the name of the target executable based on the compilation mode.
+    '''
+    return f'bin/{config.TARGET}-{compilation_mode.value}'
+
+
+def link_program(files: list[File], compilation_mode: Compilation_Mode) -> int:
     '''
     link the generated object files to an executable binary.
     '''
@@ -171,14 +200,14 @@ def link_program(files: list[File], compilation_mode: CompilationMode) -> int:
 
     objs = [file.obj for file in files]
 
-    if compilation_mode == CompilationMode.Debug:
-        mode_specific_flags = config.FLAGS_DEBUG
-    elif compilation_mode == CompilationMode.Release:
+    if compilation_mode == Compilation_Mode.Release:
         mode_specific_flags = config.FLAGS_RELEASE
+    else:
+        mode_specific_flags = config.FLAGS_DEBUG
 
-    target = f'bin/{config.TARGET}-{compilation_mode.value}'
+    target = get_target_name(compilation_mode)
 
-    log_message(Color.Green, 'link', target)
+    log_message(Color.Cyan, 'link', target)
 
     return_code = subprocess.call([
         config.COMPILER,
@@ -194,21 +223,11 @@ def link_program(files: list[File], compilation_mode: CompilationMode) -> int:
     return return_code
 
 
-def main():
-    # parse command line arguments
-    if len(sys.argv) == 1:
-        compilation_mode = CompilationMode.Debug
-    elif sys.argv[1] == 'debug':
-        compilation_mode = CompilationMode.Debug
-    elif sys.argv[1] == 'release':
-        compilation_mode = CompilationMode.Release
-    elif sys.argv[1] == 'clean':
-        subprocess.call(['rm', '-rf', 'bin/', 'obj/'])
-        exit(0)
-    else:
-        log_message(Color.Red, 'err', f'unknown subcommand `{sys.argv[1]}`')
-        exit(1)
-
+def compile_executable(compilation_mode: Compilation_Mode):
+    '''
+    compile an executable. the parameter `compilation_mode` describes if it
+    should be a debug or release build.
+    '''
     # obtain source files
     files = get_file_list(compilation_mode)
 
@@ -224,6 +243,39 @@ def main():
     if success != 0:
         log_message(Color.Red, 'err', f'failed to link program')
         exit(success)
+
+
+def clean():
+    '''
+    remove build artifacts such as object files and binaries.
+    '''
+    subprocess.call(['rm', '-rf', 'bin/', 'obj/'])
+
+
+def run_tests():
+    '''
+    compile a test executable and run the tests specified in the `test/`
+    directory.
+    '''
+    compile_executable(Compilation_Mode.Test)
+    subprocess.call([get_target_name(Compilation_Mode.Test)])
+
+
+def main():
+    # parse command line arguments
+    if len(sys.argv) == 1:
+        compile_executable(Compilation_Mode.Debug)
+    elif sys.argv[1] == 'debug':
+        compile_executable(Compilation_Mode.Debug)
+    elif sys.argv[1] == 'release':
+        compile_executable(Compilation_Mode.Release)
+    elif sys.argv[1] == 'clean':
+        clean()
+    elif sys.argv[1] == 'test':
+        run_tests()
+    else:
+        log_message(Color.Red, 'err', f'unknown subcommand `{sys.argv[1]}`')
+        exit(1)
 
 
 if __name__ == '__main__':
