@@ -44,11 +44,11 @@ def get_source_files(compilation_mode: Compilation_Mode) -> list[str]:
     get a list of source files located in the `src/` folder. only matches files
     ending in `*.c`.
     '''
-    path = pathlib.Path('src/')
+    path = pathlib.Path(config.SRC_DIR)
     files = [str(p) for p in path.rglob('*.c')]
     if compilation_mode == Compilation_Mode.Test:
-        test_path = pathlib.Path('test/')
-        files.remove(config.SRC_MAIN)
+        test_path = pathlib.Path(config.TEST_DIR)
+        files.remove(f'{config.SRC_DIR}/{config.SRC_MAIN}')
         files.extend([str(p) for p in test_path.rglob('*.c')])
     return files
 
@@ -59,13 +59,22 @@ def get_object_location(src_file: str, compilation_mode: Compilation_Mode) -> st
     `src/foo/bar/baz.c` will have the object location `obj/debug/foo/bar/baz.c`
     if compiled in debug mode.
     '''
+    # obtain the folder where the object will go. this is used to put object
+    # files from debug builds in `obj/debug` and object files from release
+    # builds in `obj/release`.
     if compilation_mode == Compilation_Mode.Test:
         subfolder = Compilation_Mode.Debug.value
     else:
         subfolder = compilation_mode.value
-    result = src_file.replace('src/', f'obj/{subfolder}/')
-    result = result.replace('test/', 'obj/test/')
-    result = result[:-2] + '.o'
+    result = src_file
+    # replace `src/` and `test/` prefixes from source files with appropriate
+    # `obj/...` prefixes for their respective object files
+    src_path_parts = pathlib.Path(src_file).parts
+    if src_path_parts[0] == config.SRC_DIR:
+        result = src_file.replace(config.SRC_DIR, f'{config.OBJ_DIR}/{subfolder}', 1)
+    elif src_path_parts[0] == config.TEST_DIR:
+        result = src_file.replace(config.TEST_DIR, f'{config.OBJ_DIR}/test', 1)
+    result += '.o'
     return result
 
 
@@ -74,10 +83,11 @@ def get_include_directories(src_file: str) -> list[str]:
     get a list the directories that header files are located in, to be used as
     compiler flags.
     '''
-    if src_file.startswith('test/'):
+    if pathlib.Path(src_file).parts[0] == config.TEST_DIR:
         return ['-Iinc', '-Itest']
     else:
         return ['-Iinc']
+
 
 def get_dependencies(src_file: str) -> list[str]:
     '''
@@ -189,14 +199,14 @@ def get_target_name(compilation_mode: Compilation_Mode) -> str:
     '''
     get the name of the target executable based on the compilation mode.
     '''
-    return f'bin/{config.TARGET}-{compilation_mode.value}'
+    return f'{config.BIN_DIR}/{config.TARGET}-{compilation_mode.value}'
 
 
 def link_program(files: list[File], compilation_mode: Compilation_Mode) -> int:
     '''
     link the generated object files to an executable binary.
     '''
-    os.makedirs('bin/', exist_ok=True)
+    os.makedirs(config.BIN_DIR, exist_ok=True)
 
     objs = [file.obj for file in files]
 
@@ -233,23 +243,23 @@ def compile_executable(compilation_mode: Compilation_Mode):
 
     # compile object files
     for file in files:
-        success = compile_file(file, compilation_mode)
-        if success != 0:
+        return_code = compile_file(file, compilation_mode)
+        if return_code != 0:
             log_message(Color.Red, 'err', f'failed to compile {file.obj}')
-            exit(success)
+            exit(return_code)
 
     # generate executable
-    success = link_program(files, compilation_mode)
-    if success != 0:
+    return_code = link_program(files, compilation_mode)
+    if return_code != 0:
         log_message(Color.Red, 'err', f'failed to link program')
-        exit(success)
+        exit(return_code)
 
 
 def clean():
     '''
     remove build artifacts such as object files and binaries.
     '''
-    subprocess.call(['rm', '-rf', 'bin/', 'obj/'])
+    subprocess.call(['rm', '-rf', config.BIN_DIR, config.OBJ_DIR])
 
 
 def run_tests():
