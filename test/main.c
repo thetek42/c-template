@@ -1,14 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "common.h"
 #include "test.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 
 /** declarations **************************************************************/
 
 static Test_Result test_add (void);
-static u64 add(u64 a, u64 b);
-
+static u64 add (u64 a, u64 b);
 
 /** functions *****************************************************************/
 
@@ -24,7 +22,6 @@ main (const int argc, const char *const argv[])
 
   t_exit ();
 }
-
 
 /** static functions **********************************************************/
 

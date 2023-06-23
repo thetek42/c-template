@@ -1,24 +1,24 @@
 #include "common.h"
+#include "log.h"
 #include <stdarg.h>
 #include <stdlib.h>
-#include "log.h"
 
-
-/** functions *****************************************************************/
+/** functions *************************************************************************************/
 
 /**
- * safe `malloc()` wrapper. instead of returning `nullptr` on error, this
- * function will crash the program. returns a pointer to the allocated memory.
+ * safe `malloc()` wrapper. instead of returning `nullptr` on error, this function will crash the
+ * program. returns a pointer to the allocated memory.
  */
 void *
-__smalloc (const usize nmemb,      /* number of elements to allocate */
-           const usize size        /* size of each element */
+__smalloc (const usize nmemb, /* number of elements to allocate */
+           const usize size   /* size of each element */
 #ifdef DEBUG_ALLOC
            ,
-           const char *const file, /* __FILE__ */
-           const usize line        /* __LINE__ */
+           char *file, /* __FILE__ */
+           usize line  /* __LINE__ */
 #endif
-) {
+)
+{
   void *ptr;
 
   ptr = malloc (nmemb * size);
@@ -36,18 +36,19 @@ __smalloc (const usize nmemb,      /* number of elements to allocate */
 }
 
 /**
- * safe `calloc()` wrapper. instead of returning `nullptr` on error, this
- * function will crash the program. returns a pointer to the allocated memory.
+ * safe `calloc()` wrapper. instead of returning `nullptr` on error, this function will crash the
+ * program. returns a pointer to the allocated memory.
  */
 void *
-__scalloc (const usize nmemb,      /* number of elements to allocate */
-           const usize size        /* size of each element */
+__scalloc (const usize nmemb, /* number of elements to allocate */
+           const usize size   /* size of each element */
 #ifdef DEBUG_ALLOC
            ,
-           const char *const file, /* __FILE__ */
-           const usize line        /* __LINE__ */
+           char *file, /* __FILE__ */
+           usize line  /* __LINE__ */
 #endif
-) {
+)
+{
   void *ptr;
 
   ptr = calloc (nmemb, size);
@@ -65,19 +66,20 @@ __scalloc (const usize nmemb,      /* number of elements to allocate */
 }
 
 /**
- * safe `realloc()` wrapper. instead of returning `nullptr` on error, this
- * function will crash the program. returns a pointer to the reallocated memory.
+ * safe `realloc()` wrapper. instead of returning `nullptr` on error, this function will crash the
+ * program. returns a pointer to the reallocated memory.
  */
 void *
-__srealloc (void *ptr,              /* the pointer to reallocate */
-            const usize nmemb,      /* number of elements to allocate */
-            const usize size        /* size of each element */
+__srealloc (void *ptr,         /* the pointer to reallocate */
+            const usize nmemb, /* number of elements to allocate */
+            const usize size   /* size of each element */
 #ifdef DEBUG_ALLOC
             ,
-            const char *const file, /* __FILE__ */
-            const usize line        /* __LINE__ */
+            char *file, /* __FILE__ */
+            usize line  /* __LINE__ */
 #endif
-) {
+)
+{
   ptr = realloc (ptr, nmemb * size);
   if (ptr == nullptr) {
 #ifdef DEBUG_ALLOC
@@ -93,9 +95,8 @@ __srealloc (void *ptr,              /* the pointer to reallocate */
 }
 
 /**
- * wrapper for `free()`. will not call `free()` on pointers that are `nullptr`.
- * this is technically not necessary according to the c standard, but you never
- * know.
+ * wrapper for `free()`. will not call `free()` on pointers that are `nullptr`. this is technically
+ * not necessary according to the c standard, but you never know.
  */
 void
 sfree (void *ptr) /* the pointer to free */

@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include "common.h"
 #include "log.h"
+#include <stdlib.h>
 
 int
 main (const int argc, const char *const argv[])
