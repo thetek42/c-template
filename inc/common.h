@@ -58,6 +58,7 @@
 
 /// common type abbreviations
 
+// default c integer types
 typedef signed char schar;
 typedef signed long long llong;
 typedef unsigned char uchar;
@@ -65,6 +66,7 @@ typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
 typedef unsigned long long ullong;
+// fixed-size integers
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -73,8 +75,15 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
+// (s)size_t
 typedef ssize_t isize;
 typedef size_t usize;
+// fixed-size booleans
+typedef uint8_t b8;
+typedef uint16_t b16;
+typedef uint32_t b32;
+typedef uint64_t b64;
+// floating point types
 typedef float f32;
 typedef double f64;
 typedef long double f128;
