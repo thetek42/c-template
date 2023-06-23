@@ -1,0 +1,13 @@
+gcc
+-std=c11
+-Iinc
+-Wall
+-Wextra
+-Wconversion
+-Wdouble-promotion
+-Wshadow
+-Wcast-qual
+-Wmissing-prototypes
+-Werror
+-pedantic
+-DDEBUG
