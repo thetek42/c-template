@@ -258,7 +258,8 @@ def run_tests():
     directory.
     '''
     compile_executable(Compilation_Mode.Test)
-    subprocess.call([get_target_name(Compilation_Mode.Test)])
+    return_code = subprocess.call([get_target_name(Compilation_Mode.Test)])
+    exit(return_code)
 
 
 def main():

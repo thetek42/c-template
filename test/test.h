@@ -2,6 +2,7 @@
 #define TEST_H_
 
 
+#include <stdlib.h>
 #include "common.h"
 #include "log.h"
 
@@ -51,6 +52,11 @@ typedef struct {
       log_err ("%zu out of %zu tests failed.\n", __test_results.failure,       \
               __test_results.success + __test_results.failure);                \
     }                                                                          \
+  } while (0)
+
+#define t_exit()                                                               \
+  do {                                                                         \
+    exit (__test_results.failure == 0u ? EXIT_SUCCESS : EXIT_FAILURE);         \
   } while (0)
 
 #endif // TEST_H_

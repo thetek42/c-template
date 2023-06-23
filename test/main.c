@@ -22,7 +22,7 @@ main (const int argc, const char *const argv[])
   t_run (test_add);
   t_end_tests ();
 
-  return EXIT_SUCCESS;
+  t_exit ();
 }
 
 
