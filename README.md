@@ -29,5 +29,8 @@ build/build.py fmt
 build/build.py clean
 ```
 
-Source files are located in `src/`, header files are located in `inc/` and
-anything used for testing goes in `test/`.
+By default, source files are located in `src/`, header files are located in
+`inc/` and anything used for testing goes in `test/`.
+
+Compiler options, source folders and the target binary name can be changed in
+`build/config.py`.
