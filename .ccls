@@ -8,6 +8,15 @@ gcc
 -Wshadow
 -Wcast-qual
 -Wmissing-prototypes
+-Wmissing-noreturn
+-Wredundant-decls
+-Wdisabled-optimization
+-Wunsafe-loop-optimizations
+-Wcast-align=strict
+-Winline
+-Wvla
+-Wlogical-op
+-Wdate-time
 -Werror
 -pedantic
 -DDEBUG
