@@ -283,6 +283,22 @@ def format_files():
         subprocess.call(['clang-format', '-i', file])
 
 
+def show_help():
+    '''
+    show the help message.
+    '''
+    print('usage: `build/build.py [subcommand]`.')
+    print()
+    print('valid subcommands:')
+    print('  debug    compile a debug build')
+    print('  release  compile a release build')
+    print('  test     run tests')
+    print('  fmt      format source files')
+    print('  clean    clean build files')
+    print()
+    print('if no subcommand is provided, a debug build will be compiled.')
+
+
 def main():
     # parse command line arguments
     if len(sys.argv) == 1:
@@ -297,6 +313,8 @@ def main():
         run_tests()
     elif sys.argv[1] == 'fmt':
         format_files()
+    elif sys.argv[1] in ('help', '-h', '--help'):
+        show_help()
     else:
         log_message(Color.Red, 'err', f'unknown subcommand `{sys.argv[1]}`')
         exit(1)
