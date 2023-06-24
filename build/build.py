@@ -84,9 +84,9 @@ def get_include_directories(src_file: str) -> list[str]:
     compiler flags.
     '''
     if pathlib.Path(src_file).parts[0] == config.TEST_DIR:
-        return ['-Iinc', '-Itest']
+        return [f'-I{config.INC_DIR}', f'-I{config.TEST_DIR}']
     else:
-        return ['-Iinc']
+        return [f'-I{config.INC_DIR}']
 
 
 def get_dependencies(src_file: str) -> list[str]:
@@ -225,7 +225,6 @@ def link_program(files: list[File], compilation_mode: Compilation_Mode) -> int:
         *config.FLAGS_WARN.split(' '),
         *mode_specific_flags.split(' '),
         *config.LIBS,
-        '-Iinc',
         *objs,
         '-o', target,
     ])
@@ -272,6 +271,18 @@ def run_tests():
     exit(return_code)
 
 
+def format_files():
+    '''
+    format all source files.
+    '''
+    files = []
+    files.extend([str(p) for p in pathlib.Path(config.SRC_DIR).rglob('*.c')])
+    files.extend([str(p) for p in pathlib.Path(config.INC_DIR).rglob('*.h')])
+    files.extend([str(p) for p in pathlib.Path(config.TEST_DIR).rglob('*.c')])
+    for file in files:
+        subprocess.call(['clang-format', '-i', file])
+
+
 def main():
     # parse command line arguments
     if len(sys.argv) == 1:
@@ -284,6 +295,8 @@ def main():
         clean()
     elif sys.argv[1] == 'test':
         run_tests()
+    elif sys.argv[1] == 'fmt':
+        format_files()
     else:
         log_message(Color.Red, 'err', f'unknown subcommand `{sys.argv[1]}`')
         exit(1)

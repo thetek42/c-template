@@ -8,6 +8,7 @@ LIBS          = ''
 SRC_DIR       = 'src'
 OBJ_DIR       = 'obj'
 BIN_DIR       = 'bin'
+INC_DIR       = 'inc'
 TEST_DIR      = 'test'
 
 SRC_MAIN      = 'main.c'
