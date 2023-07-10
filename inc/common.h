@@ -71,9 +71,11 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
-// (s)size_t
+// (s)size_t, (u)intptr_t
 typedef ssize_t isize;
 typedef size_t usize;
+typedef intptr_t iptr;
+typedef uintptr_t uptr;
 // fixed-size booleans
 typedef uint8_t b8;
 typedef uint16_t b16;
